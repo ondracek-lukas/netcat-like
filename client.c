@@ -13,11 +13,11 @@
 #include <netdb.h>
 
 #include "client.h"
-#include "errorHandling.h"
+#include "global.h"
 #include "dataExchange.h"
 
 void client(char *addr, char *port) {
-	fprintf(stderr, "Connecting to %s on port %s...\n", addr, port);
+	printLog(0, "Connecting to %s on port %s...\n", addr, port);
 	
 	struct addrinfo *ais, hints;
 	memset(&hints, 0, sizeof(struct addrinfo));

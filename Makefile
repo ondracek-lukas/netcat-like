@@ -3,7 +3,7 @@ CFLAGS=-Wall -std=c99 -pthread
 LDFLAGS=-pthread
 .PHONY: clean clean-tmps
 
-netcat: main.o client.o dataExchange.o server.o
+netcat: main.o client.o dataExchange.o server.o portScanner.o
 	$(CC) $(LDFLAGS) -o $@ $^ $>
 	@# $^ on Linux contains what $> on FreeBSD, the other is blank
 

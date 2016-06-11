@@ -5,10 +5,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
-#include "errorHandling.h"
+#include "global.h"
 #include "client.h"
 #include "server.h"
+#include "portScanner.h"
 
 
 
@@ -19,26 +22,50 @@ void exitErr(int exitcode, char *msg) {
 	exit(exitcode);
 }
 
+int verbosity = 0;
+void printLog(int level, const char *fmt, ...) {
+	if (verbosity < level) return;
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+}
+void printOut(int level, const char *fmt, ...) {
+	if (verbosity < level) return;
+	va_list ap;
+	va_start(ap, fmt);
+	vprintf(fmt, ap);
+	va_end(ap);
+}
 
 
 int main(int argc, char **argv) {
-	bool serverMode  = false;
-	char *localAddr  = NULL;
-	char *localPort  = NULL;
-	char *remotePort = NULL;
-	char *remoteAddr = NULL;
+	bool serverMode   = false;
+	bool scanMode     = false;
+	char *localAddr   = NULL;
+	char *localPort   = NULL;
+	char *remotePort  = NULL; // or possibly range "p1:p2" if scanMode
+	char *remoteAddr  = NULL;
 	
 
 	// --- HELP MESSAGE ---
 
 	if (argc==1) {
 		printf(
+			"\n"
 			"Usage:\n"
-			"  %s ADDRESS PORT\n"
-			"  %s -lp LOCAL_PORT [-s LOCAL_ADDRESS]\n"
-			"The former works as a client connecting to the given address and port,\n"
-			"the latter as a server listening on the given port.\n",
-			argv[0], argv[0]);
+			"  %s [-q] ADDRESS PORT\n"
+			"  %s [-q] -lp LOCAL_PORT [-s LOCAL_ADDRESS]\n"
+			"  %s [ -q | -v[v] ] -x ADDRESS PORT1[:PORT2]\n"
+			"\n"
+			"The first variant works as a client connecting to the given address and port.\n"
+			"The second as a server listening on the given port.\n"
+			"The third tries to connect to the address and port (or port range)\n"
+			"and prints opened ports.\n"
+			"\n"
+			"Argument -v increases verbosity, -q decreases.\n"
+			"\n",
+			argv[0], argv[0], argv[0]);
 		return 0;
 	}
 
@@ -46,7 +73,7 @@ int main(int argc, char **argv) {
 	// --- PARSING PARAMETERS ---
 
 	char c;
-	while ((c=getopt(argc, argv, "lp:s:"))!=-1) {
+	while ((c=getopt(argc, argv, "lp:s:xvq"))!=-1) {
 		switch (c) {
 			case 'l':
 				serverMode=true;
@@ -57,10 +84,23 @@ int main(int argc, char **argv) {
 			case 's':
 				localAddr=optarg;
 				break;
+			case 'x':
+				scanMode=true;
+				break;
+			case 'v':
+				verbosity++;
+				break;
+			case 'q':
+				verbosity--;
+				break;
 			default:
 				exitErr(1, NULL);
 				break;
 		}
+	}
+
+	if (serverMode && scanMode) {
+		exitErr(1, "Cannot listen and scan simultaneously.");
 	}
 
 	if (serverMode && !localPort) {
@@ -80,10 +120,10 @@ int main(int argc, char **argv) {
 	}
 	
 	if (!serverMode && localPort) {
-		printf("Warning: Local port parameter is ignored.\n");
+		printLog(0, "Warning: Local port parameter is ignored.\n");
 	}
 	if (!serverMode && localAddr) {
-		printf("Warning: Local address parameter is ignored.\n");
+		printLog(0, "Warning: Local address parameter is ignored.\n");
 	}
 	
 
@@ -91,6 +131,12 @@ int main(int argc, char **argv) {
 	
 	if (serverMode) {
 		server(localAddr, localPort);
+	} else if (scanMode) {
+		char *port1=remotePort;
+		char *port2=strchr(remotePort, ':');
+		if (port2) *port2++='\0';
+		else        port2=port1;
+		portScanner(remoteAddr, port1, port2);
 	} else {
 		client(remoteAddr, remotePort);
 	}

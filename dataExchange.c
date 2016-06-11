@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 #include "dataExchange.h"
-#include "errorHandling.h"
+#include "global.h"
 
 static void *incommingPrinter(void *sockPtr);
 static void *inputSender(void *sockPtr);

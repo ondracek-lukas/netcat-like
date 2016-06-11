@@ -1,0 +1,13 @@
+
+Usage:
+  ./netcat [-q] ADDRESS PORT
+  ./netcat [-q] -lp LOCAL_PORT [-s LOCAL_ADDRESS]
+  ./netcat [ -q | -v[v] ] -x ADDRESS PORT1[:PORT2]
+
+The first variant works as a client connecting to the given address and port.
+The second as a server listening on the given port.
+The third tries to connect to the address and port (or port range)
+and prints opened ports.
+
+Argument -v increases verbosity, -q decreases.
+

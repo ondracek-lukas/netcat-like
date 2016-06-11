@@ -14,15 +14,15 @@
 #include <netdb.h>
 
 #include "server.h"
-#include "errorHandling.h"
+#include "global.h"
 #include "dataExchange.h"
 
 
 void server(char *addr, char *port) {
 	if (addr) {
-		fprintf(stderr, "Listenning on port %s (%s)...\n", port, addr);
+		printLog(0, "Listenning on port %s (%s)...\n", port, addr);
 	} else {
-		fprintf(stderr, "Listenning on port %s...\n", port);
+		printLog(0, "Listenning on port %s...\n", port);
 	}
 
 	struct addrinfo *ais, hints;
